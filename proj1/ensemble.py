@@ -5,7 +5,7 @@ from sklearn import metrics
 
 # Arg
 # e.g.
-#    python .\unsemble.py .\data\test_set.json .\output\ensemble.csv
+#    python .\ensemble.py .\data\test_set.json .\output\ensemble.csv
 test_path = sys.argv[1]
 output_path = sys.argv[2]
 

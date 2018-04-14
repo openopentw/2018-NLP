@@ -108,4 +108,5 @@ if __name__ == '__main__':
     error = metrics.mean_squared_error(pred, y_test[:,0])
     print('MSE: {}'.format(error)) # MSE: 0.10734628588677432
     # all-zero: MSE: 0.15586947160883283
+    # all-rand(-1, 1): MSE: 0.5209561021482233
     np.savetxt(output_path, pred, delimiter=',')

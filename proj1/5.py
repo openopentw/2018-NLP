@@ -1,4 +1,4 @@
-# TODO: read tags
+# TODO: read tags (do one-hot encoding)
 
 import nltk
 import numpy as np
