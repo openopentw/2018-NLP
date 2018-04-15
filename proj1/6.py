@@ -93,11 +93,11 @@ if __name__ == '__main__':
     # Args
     # eg:
     #   NTUSD-Fin
-    #       python .\5.py .\data\training_set.json .\data\test_set.json .\data\outside_data\NTUSD-Fin\NTUSD_Fin_word_v1.0.json .\output\output.csv
+    #       python .\6.py .\data\training_set.json .\data\test_set.json .\data\outside_data\NTUSD-Fin\NTUSD_Fin_word_v1.0.json .\output\output.csv
     #   word2vec
-    #       python .\5.py .\data\training_set.json .\data\test_set.json .\data\outside_data\GoogleNews-vectors-negative300.bin .\output\output.csv
+    #       python .\6.py .\data\training_set.json .\data\test_set.json .\data\outside_data\GoogleNews-vectors-negative300.bin .\output\output.csv
     #   GLOVE
-    #       python .\5.py .\data\training_set.json .\data\test_set.json .\data\outside_data\glove.6B\glove.6b.300d.txt .\output\output.csv
+    #       python .\6.py .\data\training_set.json .\data\test_set.json .\data\outside_data\glove.6B\glove.6b.300d.txt .\output\output.csv
     train_path = sys.argv[1]
     test_path = sys.argv[2]
     sdfin_path = sys.argv[3]
@@ -118,23 +118,23 @@ if __name__ == '__main__':
         # 'tweet',
     ])
 
-    sdfin = read_sdfin(sdfin_path, [
-        # 'bear_cfidf',
-        # 'bear_freq',
-        # 'bull_cfidf',
-        # 'bull_freq',
-        # 'chi_squared',
-        # 'market_sentiment',
-        'token',
-        'word_vec',
-    ])
-    sdfin_dict = sdfin.set_index('token')['word_vec'].to_dict()
-    # glove_dic = read_glove(glove_path)
+    # sdfin = read_sdfin(sdfin_path, [
+    #     # 'bear_cfidf',
+    #     # 'bear_freq',
+    #     # 'bull_cfidf',
+    #     # 'bull_freq',
+    #     # 'chi_squared',
+    #     # 'market_sentiment',
+    #     'token',
+    #     'word_vec',
+    # ])
+    # sdfin_dict = sdfin.set_index('token')['word_vec'].to_dict()
+    glove_dic = read_glove(glove_path)
 
     tags = [x[1] for x in x_train] + [x[1] for x in x_test]
     tag_index = make_tag_index(tags, thres=1)
-    X_train = preprocess_on_x(x_train, sdfin_dict, tag_index)
-    X_test = preprocess_on_x(x_test, sdfin_dict, tag_index)
+    X_train = preprocess_on_x(x_train, glove_dic, tag_index)
+    X_test = preprocess_on_x(x_test, glove_dic, tag_index)
 
     print(X_train.shape)
     print(X_test.shape)
@@ -145,31 +145,27 @@ if __name__ == '__main__':
     # print(X_train.shape)
     # print(x_test.shape)
 
-    # MSE: 0.09183360604899565
-    # MSE: 0.09221766074560166
-    # MSE: 0.09253179030209596
-    xgb_params = {
-        'eta': 0.05,
-        'max_depth': 6,
-        'subsample': 0.6,
-        'colsample_bytree': 1,
-        'objective': 'reg:linear',
-        'eval_metric': 'rmse',
-        'silent': 1
-    }
-
-    # # MSE: 0.09294807753438014
-    # # MSE: 0.09287819087719315
-    # # MSE: 0.09300856644997402
+    # # MSE: 0.0975049528062592
     # xgb_params = {
     #     'eta': 0.05,
-    #     'max_depth': 5,
-    #     'subsample': 0.7,
-    #     'colsample_bytree': 0.7,
+    #     'max_depth': 6,
+    #     'subsample': 0.6,
+    #     'colsample_bytree': 1,
     #     'objective': 'reg:linear',
     #     'eval_metric': 'rmse',
     #     'silent': 1
     # }
+
+    # MSE: 0.0956804671283707
+    xgb_params = {
+        'eta': 0.05,
+        'max_depth': 5,
+        'subsample': 0.7,
+        'colsample_bytree': 0.7,
+        'objective': 'reg:linear',
+        'eval_metric': 'rmse',
+        'silent': 1
+    }
 
     cv_output = xgb.cv(xgb_params, dtrain, num_boost_round=2000, early_stopping_rounds=20, verbose_eval=25, show_stdv=False)
     print('best num_boost_rounds = ', len(cv_output))
