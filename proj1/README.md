@@ -5,7 +5,9 @@
 - [x] Add tag data. (maybe by using one-hot encoding)
 - [ ] Calculate WCS score
 - [ ] Calculate f1 score
-- [ ] Try DNN by padding
+- [ ] Try RNN (do padding first)
+- [ ] Try [Microsoft / LightGBM](https://github.com/Microsoft/LightGBM)
+- [ ] Try LIBSVM
 - [ ] Try other methods. (e.g.: AdaBoostRegressor, RandomForest, ... etc)
 
 ## Experiment Result
