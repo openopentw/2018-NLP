@@ -2,8 +2,9 @@
 
 ## TODO
 
-- [x] Add tag data. (maybe by using one-hot encoding)
-- [ ] Calculate WCS score
+- [x] Add target data. (maybe by using one-hot encoding)
+- [x] Calculate WCS score
+- [ ] Process hash tags which are in snippet.
 - [ ] Calculate f1 score
 - [ ] Try RNN (do padding first)
 - [ ] Try [Microsoft / LightGBM](https://github.com/Microsoft/LightGBM)
@@ -20,8 +21,20 @@
 | 2    | 0.1018     | sklearn: gradient boosting   | NTUSD-Fin: word_vec         |
 | 3    | 0.0920     | XGBoost                      | NTUSD-Fin: word_vec         |
 | 4    | 0.0964     | XGBoost                      | GLOVE                       |
-| 5    | **0.0918** | XGBoost, use tags as one-hot | NTUSD-Fin: word_vec         |
+| 5    | 0.0918     | XGBoost, use tags as one-hot | NTUSD-Fin: word_vec         |
 | 6    | 0.0957     | XGBoost, use tags as one-hot | GLOVE                       |
+| 7    | **0.0677** | XGBoost, use tags as one-hot | Google Pre-train Word2vec   |
+| 8    |            | SVM, use tags as one-hot     | Google Pre-train Word2vec   |
+
+## Classify Result (F1-score)
+
+| id   | Macro F1 | Micro F1 | method              |
+| ---- | -------- | -------- | ------------------- |
+| rand |          |          | random from [-1, 1] |
+| zero |          |          | all 0               |
+| 7    |          |          |                     |
+
+(Use **Google Pre-train Word2vec** as outside_data)
 
 ## Ensemble Result
 

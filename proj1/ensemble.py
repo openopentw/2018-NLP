@@ -11,16 +11,12 @@ output_path = sys.argv[2]
 
 # MSE: 0.08839117954201112
 csv_list = [
-    './output/3.csv',
-    './output/4.csv',
-    './output/5.csv',
-    './output/6.csv',
+    './output/7-0.csv',
+    './output/7-gbr.csv',
 ]
 
 weights = np.array([
-    1.2,
-    1,
-    1.2,
+    3,
     1,
 ])
 weights = weights / weights.sum()
