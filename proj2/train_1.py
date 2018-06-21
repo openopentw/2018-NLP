@@ -148,12 +148,12 @@ def main():
 
     train = read_train(train_path)
     # json.dump(train[:10], sys.stdout, indent=2)
-    # w2v_dic = read_word2vec(w2v_path)
-    glove_dic = read_glove(glove_path)
+    w2v_dic = read_word2vec(w2v_path)
+    # glove_dic = read_glove(glove_path)
     # sdfin = read_sdfin(sdfin_path, ['token', 'word_vec'])
     # sdfin_dic = sdfin.set_index('token')['word_vec'].to_dict()
 
-    embds = make_embds(train, glove_dic)
+    embds = make_embds(train, w2v_dic)
     print(embds[:10])
     print(embds.shape)
 
