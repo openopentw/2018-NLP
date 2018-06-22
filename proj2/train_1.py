@@ -8,7 +8,7 @@ import pandas as pd
 
 from gensim.models import KeyedVectors
 
-import british_to_american
+import bt2us
 
 MISSING_VAL = -999
 
@@ -29,7 +29,6 @@ def read_train(path):
     """ Read training data. """
     with open(path) as infile:
         data = infile.read()
-    data = british_to_american.british_to_american(data)
     data = data.lower()
     data = data.split('\n\n')[:-1]
 
@@ -49,8 +48,8 @@ def read_train(path):
             if e_precede == 'e2':
                 order += 1
         ret += [{
-            'e1': e_1,
-            'e2': e_2,
+            'e1': bt2us.trans_term(e_1),
+            'e2': bt2us.trans_term(e_2),
             # 'rel_str': rel_str,
             'rel': order,
         }]
@@ -152,8 +151,9 @@ def main():
     # glove_dic = read_glove(glove_path)
     # sdfin = read_sdfin(sdfin_path, ['token', 'word_vec'])
     # sdfin_dic = sdfin.set_index('token')['word_vec'].to_dict()
+    dic = w2v_dic
 
-    embds = make_embds(train, w2v_dic)
+    embds = make_embds(train, dic)
     print(embds[:10])
     print(embds.shape)
 

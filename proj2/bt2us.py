@@ -1,8 +1,13 @@
-# List of d differences taken from:
-# http://www.tysto.com/uk-us-spelling-list.html
-#
-# key/value pairs can be added if required
-us2gb = {
+""" This module help transform british english to american english.
+
+Example:
+    print(trans_sen("I realise I can see the world in colour but I can't vocalise its splendour"))
+    print(trans_term('colour'))
+
+"""
+
+# list from: http://www.tysto.com/uk-us-spelling-list.html
+US2BT = { # american to british
     'accessorize': 'accessorise',
     'accessorized': 'accessorised',
     'accessorizes': 'accessorises',
@@ -804,16 +809,64 @@ us2gb = {
     'sulfur': 'sulphur',
     'sulfurous': 'sulphurous'
 }
+US2BT.update({
+    # american to british
+    'tumor': 'tumour',
+    'flavors': 'flavours',
+    'labor': 'labour',
+    # other addition
+    'license': 'licence',
+    'email': 'e-mail',
+})
 
-def british_to_american(text, mydict=us2gb):
-    for gb, us in mydict.items():
-        text = text.replace(us, gb)
-    return text
+BT2US = { US2BT[us] : us for us in US2BT }
+
+def trans_sen(sen, dic=BT2US):
+    """ Translate a sentence from British English to American English.
+
+    Translate a sentence from British English to American English.
+    Besides, this function split the sentence by ' '.
+
+    Arg:
+        sen: A string that contains the sentence in British English.
+
+    Return: A string that contains the sentence in American English that
+        correspond to the string from input.
+
+    """
+    tokens = sen.split(' ')
+    new_sen = []
+    for token in tokens:
+        if token in dic:
+            new_sen += [dic[token]]
+        else:
+            new_sen += [token]
+    return ' '.join(new_sen)
+
+def trans_term(term, dic=BT2US):
+    """ Translate a word term from British English to American English.
+
+    Arg:
+        term: A string that contains only one word that is in British English.
+
+    Return: A string that contains one word in American English that
+        correspond to the string from input.
+
+    """
+    if term in dic:
+        return dic[term]
+    if 'our' in term:
+        term = term.replace('our', 'or')
+        if term in dic:
+            return dic[term]
+    if '-' in term:
+        term = term.replace('-', ' ')
+        return trans_sen(term)
 
 def main():
-    gb_text = "I realise I can see the world in colour but I can't vocalise its splendour"
-    us_text = replace_all(gb_text, us2gb)
-    print ("GB:", gb_text)
+    bt_text = "I realise I can see the world in colour but I can't vocalise its splendour"
+    us_text = trans_sen(bt_text)
+    print ("BT:", bt_text)
     print ("----------------------------------------------------------------------------")
     print ("US:", us_text)
 
