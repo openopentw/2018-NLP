@@ -819,7 +819,7 @@ US2BT.update({
     'email': 'e-mail',
 })
 
-BT2US = { US2BT[us] : us for us in US2BT }
+BT2US = {US2BT[us] : us for us in US2BT}
 
 def trans_sen(sen, dic=BT2US):
     """ Translate a sentence from British English to American English.
@@ -828,9 +828,9 @@ def trans_sen(sen, dic=BT2US):
     Besides, this function split the sentence by ' '.
 
     Arg:
-        sen: A string that contains the sentence in British English.
+        sen: A string that contains a sentence in British English.
 
-    Return: A string that contains the sentence in American English that
+    Return: A string that contains a sentence in American English that
         correspond to the string from input.
 
     """
@@ -862,13 +862,15 @@ def trans_term(term, dic=BT2US):
     if '-' in term:
         term = term.replace('-', ' ')
         return trans_sen(term)
+    return term
 
 def main():
+    """ Main function. """
     bt_text = "I realise I can see the world in colour but I can't vocalise its splendour"
     us_text = trans_sen(bt_text)
-    print ("BT:", bt_text)
-    print ("----------------------------------------------------------------------------")
-    print ("US:", us_text)
+    print('BT:', bt_text)
+    print('----------------------------------------------------------------------------')
+    print('US:', us_text)
 
 if __name__ == '__main__':
     main()
