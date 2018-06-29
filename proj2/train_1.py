@@ -21,8 +21,9 @@ XGB_PARAMS = {
     'colsample_bytree': 1,
     'objective': 'multi:softmax',
     'num_class': 19,
-    'eval_metric': 'mlogloss',
-    'silent': 0
+    'eval_metric': 'merror',
+    'nthread': 4,
+    'silent': 1,
 }
 
 RELS = {
@@ -73,6 +74,14 @@ def get_rel(rel_str):
             order += 1
     return order
 
+def get_onehot_table(orders):
+    """ Transform y_data from scalar to one-hot. """
+    return orders
+    # y_data = np.zeros((len(orders), 19))
+    # for i, order in enumerate(orders):
+    #     y_data[i, order] = 1
+    # return y_data
+
 def read_train(path):
     """ Read training data. """
     with open(path) as infile:
@@ -94,6 +103,7 @@ def read_train(path):
             'e2': e_2,
         }]
         y_data += [order]
+    y_data = get_onehot_table(y_data)
     return x_data, y_data
 
 def read_test(path):
@@ -203,7 +213,7 @@ def make_embds(x_data, dic):
         a (n * 600) numpy-array, where n is the number of term in x_data.
 
     """
-    ret_data = np.zeros((8000, 600))
+    ret_data = np.zeros((x_data.shape[0], 600))
     not_in_cnt = 0
     for i, term in enumerate(x_data):
         embd1, new_cnt_1 = term_to_embd(term['e1'], dic)
@@ -212,6 +222,19 @@ def make_embds(x_data, dic):
         ret_data[i, :] = np.append(embd1, embd2)
     print(not_in_cnt)
     return ret_data
+
+def output(pred, filename):
+    """ output the predict result. """
+    with open(filename, 'w') as outfile:
+        for i, p in enumerate(pred):
+            print(8001 + i, end='\t', file=outfile)
+            print(RELS[int((p // 2) * 2)], end='', file=outfile)
+            if p == 18:
+                print('', file=outfile)
+            elif p % 2 == 0:
+                print('(e1,e2)', file=outfile)
+            else:
+                print('(e2,e1)', file=outfile)
 
 def main():
     """ Main function. """
@@ -233,31 +256,29 @@ def main():
     x_train = make_embds(x_train, dic)
     x_test = make_embds(test, dic)
     print(x_train[:10])
-    print(x_train.shape)
+    print(y_train[:10])
     print(x_test[:10])
     print(x_test.shape)
 
     dtrain = xgb.DMatrix(x_train, y_train)
     dtest = xgb.DMatrix(x_test)
 
-    cv_output = xgb.cv(XGB_PARAMS,
-                       dtrain,
-                       num_boost_round=2000,
-                       early_stopping_rounds=20,
-                       verbose_eval=25,
-                       show_stdv=True)
-    print('best num_boost_rounds = ', len(cv_output))
-    num_boost_rounds = len(cv_output)
-    # num_boost_rounds = 1436
+    # cv_output = xgb.cv(XGB_PARAMS,
+    #                    dtrain,
+    #                    num_boost_round=2000,
+    #                    early_stopping_rounds=20,
+    #                    verbose_eval=25,
+    #                    show_stdv=False)
+    # print('best num_boost_rounds = ', len(cv_output))
+    # num_boost_rounds = len(cv_output)
+    num_boost_rounds = 246
     model = xgb.train(XGB_PARAMS,
                       dtrain,
                       num_boost_round=num_boost_rounds)
     pred = model.predict(dtest)
 
-    np.savetxt('a.csv', pred, delimiter=',')
-
-    macro = metrics.f1_score(pred, y_test, average='macro')
-    print('MACRO: {}'.format(macro))
+    np.savetxt('c.csv', pred, delimiter=',')
+    output(pred, './pred.txt')
 
 if __name__ == '__main__':
     main()
