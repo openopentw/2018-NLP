@@ -39,6 +39,19 @@ RELS = {
     'other': 18,
 }
 
+INV_RELS = {
+    0: 'Cause-Effect',
+    2: 'Instrument-Agency',
+    4: 'Product-Producer',
+    6: 'Content-Container',
+    8: 'Entity-Origin',
+    10: 'Entity-Destination',
+    12: 'Component-Whole',
+    14: 'Member-Collection',
+    16: 'Message-Topic',
+    18: 'Other',
+}
+
 def get_entity(sen):
     """ Get the two entities labeled in the given string.
 
@@ -74,13 +87,22 @@ def get_rel(rel_str):
             order += 1
     return order
 
-def get_onehot_table(orders):
-    """ Transform y_data from scalar to one-hot. """
-    return orders
-    # y_data = np.zeros((len(orders), 19))
-    # for i, order in enumerate(orders):
-    #     y_data[i, order] = 1
-    # return y_data
+def get_neighbors(sen, num_neighbors):
+    """ Get the neighbors words
+
+    Return: Two list containing the words surrounding e1 and e2.
+
+    """
+    e1_before = sen.split('<e1>')[0]
+    e1_nei = nltk.word_tokenize(e1_before)[-num_neighbors:]
+    e1_after = sen.split('</e1>')[1].split('<e2')[0]
+    e1_nei += nltk.word_tokenize(e1_after)[: num_neighbors]
+
+    e2_before = sen.split('<e2>')[0].split('</e1>')[1]
+    e2_nei = nltk.word_tokenize(e2_before)[-num_neighbors:]
+    e2_after = sen.split('</e2>')[1]
+    e2_nei += nltk.word_tokenize(e2_after)[: num_neighbors]
+    return e1_nei, e2_nei
 
 def read_train(path):
     """ Read training data. """
@@ -94,16 +116,19 @@ def read_train(path):
     for dat in data:
         dat = dat.split('\n')[:2]
         sen = dat[0].split('\t')[1][1:-1]
+        e1_nei, e2_nei = get_neighbors(sen, 2)
 
         e_1, e_2 = get_entity(sen)
         order = get_rel(dat[1])
 
         x_data += [{
+            'sen': sen,
             'e1': e_1,
             'e2': e_2,
+            'e1_nei': e1_nei,
+            'e2_nei': e2_nei,
         }]
         y_data += [order]
-    y_data = get_onehot_table(y_data)
     return x_data, y_data
 
 def read_test(path):
@@ -120,10 +145,14 @@ def read_test(path):
         sen = dat.split('\t')[1][1:-1]
 
         e_1, e_2 = get_entity(sen)
+        e1_nei, e2_nei = get_neighbors(sen, 3)
 
         x_data += [{
+            'sen': sen,
             'e1': e_1,
             'e2': e_2,
+            'e1_nei': e1_nei,
+            'e2_nei': e2_nei,
         }]
     return x_data
 
@@ -213,11 +242,23 @@ def make_embds(x_data, dic):
         a (n * 600) numpy-array, where n is the number of term in x_data.
 
     """
-    ret_data = np.zeros((x_data.shape[0], 600))
+    ret_data = np.zeros((len(x_data), 1200))
     not_in_cnt = 0
     for i, term in enumerate(x_data):
         embd1, new_cnt_1 = term_to_embd(term['e1'], dic)
+        nei_embd1 = np.zeros(300)
+        for nei in term['e1_nei']:
+            ret, ret_cnt = term_to_embd(nei, dic)
+            nei_embd1 += ret
+        embd1 = np.append(embd1, nei_embd1)
+
         embd2, new_cnt_2 = term_to_embd(term['e2'], dic)
+        nei_embd2 = np.zeros(300)
+        for nei in term['e2_nei']:
+            ret, ret_cnt = term_to_embd(nei, dic)
+            nei_embd2 += ret
+        embd2 = np.append(embd2, nei_embd2)
+
         not_in_cnt += new_cnt_1 + new_cnt_2
         ret_data[i, :] = np.append(embd1, embd2)
     print(not_in_cnt)
@@ -228,7 +269,7 @@ def output(pred, filename):
     with open(filename, 'w') as outfile:
         for i, p in enumerate(pred):
             print(8001 + i, end='\t', file=outfile)
-            print(RELS[int((p // 2) * 2)], end='', file=outfile)
+            print(INV_RELS[int((p // 2) * 2)], end='', file=outfile)
             if p == 18:
                 print('', file=outfile)
             elif p % 2 == 0:
@@ -240,16 +281,15 @@ def main():
     """ Main function. """
     assert len(sys.argv) > 1, 'Please give me the path to training file.'
     assert len(sys.argv) > 2, 'Please give me the path to testing file.'
-    assert len(sys.argv) > 3, 'Please give me the path to answer key file.'
-    assert len(sys.argv) > 4, 'Please give me the path to Google Word2Vec file.'
+    assert len(sys.argv) > 3, 'Please give me the path to Google Word2Vec file.'
+    assert len(sys.argv) > 4, 'Please give me the path to output file.'
 
     x_train, y_train = read_train(sys.argv[1])
     test = read_test(sys.argv[2])
-    y_test = read_ans(sys.argv[3])
     # json.dump(train[:10], sys.stdout, indent=2)
-    w2v_dic = read_word2vec(sys.argv[4])
-    # glove_dic = read_glove(sys.argv[4])
-    # sdfin = read_sdfin(sys.argv[4], ['token', 'word_vec'])
+    w2v_dic = read_word2vec(sys.argv[3])
+    # glove_dic = read_glove(sys.argv[3])
+    # sdfin = read_sdfin(sys.argv[3], ['token', 'word_vec'])
     # sdfin_dic = sdfin.set_index('token')['word_vec'].to_dict()
 
     dic = w2v_dic
@@ -277,8 +317,7 @@ def main():
                       num_boost_round=num_boost_rounds)
     pred = model.predict(dtest)
 
-    np.savetxt('c.csv', pred, delimiter=',')
-    output(pred, './pred.txt')
+    output(pred, sys.argv[4])
 
 if __name__ == '__main__':
     main()
